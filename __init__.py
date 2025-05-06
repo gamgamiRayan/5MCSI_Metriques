@@ -2,6 +2,8 @@ from flask import Flask, render_template_string, render_template, jsonify
 from flask import render_template
 from flask import json
 from datetime import datetime
+import requests
+from collections import Counter
 from urllib.request import urlopen
 import sqlite3
                                                                                                                                        
@@ -34,6 +36,28 @@ def meteo():
         temp_day_value = list_element.get('main', {}).get('temp') - 273.15 # Conversion de Kelvin en °c 
         results.append({'Jour': dt_value, 'temp': temp_day_value})
     return jsonify(results=results)
+
+@app.route('/commits/')
+def commits():
+    url = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
+    response = requests.get(url)
+    data = response.json()
+
+  
+    minutes_list = []
+    for item in data:
+        try:
+            date_str = item["commit"]["author"]["date"]
+            date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
+            minutes_list.append(date_obj.minute)
+        except:
+            continue
+
+    minute_counts = Counter(minutes_list)
+
+  
+    minute_data = sorted(minute_counts.items())  
+    return render_template("commits.html", data=minute_data)
 
   
 if __name__ == "__main__":
