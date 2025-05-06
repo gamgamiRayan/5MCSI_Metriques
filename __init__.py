@@ -39,9 +39,11 @@ def meteo():
 def commits():
     url = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
+        response = requests.get(url, timeout=15)  # Increased timeout to 15 seconds
+        response.raise_for_status()  # Will raise an HTTPError if the status is not 200
         data = response.json()
+    except requests.exceptions.Timeout:
+        return "<h2>Le serveur GitHub a mis trop de temps à répondre. Veuillez réessayer plus tard.</h2>"
     except requests.exceptions.RequestException as e:
         return f"<h2>Erreur lors de l'accès à l'API GitHub : {e}</h2>"
 
@@ -55,9 +57,10 @@ def commits():
             continue
 
     minute_counts = Counter(minutes_list)
-    minute_data = sorted(minute_counts.items())  # List of (minute, count)
+    minute_data = sorted(minute_counts.items())
 
     return render_template("commits.html", data=minute_data)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
