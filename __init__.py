@@ -21,7 +21,7 @@ def mongraphique():
 
 @app.route("/")
 def hello_world():
-    return render_template("hello.html")
+    return render_template('hello.html')
 
 @app.route("/tawarano/")
 def meteo():
@@ -38,22 +38,24 @@ def meteo():
 @app.route("/commits/")
 def commits():
     url = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+    except requests.exceptions.RequestException as e:
+        return f"<h2>Erreur lors de l'accès à l'API GitHub : {e}</h2>"
 
-    # Extraire les minutes de chaque commit
     minutes_list = []
     for item in data:
         try:
             date_str = item["commit"]["author"]["date"]
             date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
             minutes_list.append(date_obj.minute)
-        except:
+        except Exception:
             continue
 
-    # Compter les commits par minute
     minute_counts = Counter(minutes_list)
-    minute_data = sorted(minute_counts.items())  # [(minute, count), ...]
+    minute_data = sorted(minute_counts.items())  # List of (minute, count)
 
     return render_template("commits.html", data=minute_data)
 
