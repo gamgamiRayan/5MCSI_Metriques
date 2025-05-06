@@ -1,38 +1,237 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Commits par minute</title>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activité des Commits</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-      google.charts.load('current', {packages:['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
+    <style>
+        /* Import d'une police Google */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-      function drawChart() {
-        // Charger les données depuis Flask (injection par Jinja2)
-        var rawData = {{ data|tojson }};
-        var dataTable = new google.visualization.DataTable();
-        dataTable.addColumn('string', 'Minute');
-        dataTable.addColumn('number', 'Commits');
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
 
-        rawData.forEach(function(item) {
-          dataTable.addRow([item[0].toString(), item[1]]);
-        });
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
 
-        var options = {
-          title: 'Commits GitHub minute par minute',
-          hAxis: { title: 'Minute', minValue: 0, maxValue: 59 },
-          vAxis: { title: 'Nombre de Commits' },
-          legend: 'none'
-        };
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+        }
 
-        var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
-        chart.draw(dataTable, options);
-      }
+        #chart_div {
+            width: 100%;
+            height: 500px;
+            margin-top: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .loading {
+            text-align: center;
+            margin: 60px 0;
+            font-size: 18px;
+            color: #666;
+            font-weight: 300;
+        }
+
+        .info-panel {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-left: 5px solid #3498db;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: #3498db;
+            font-weight: 500;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            margin-bottom: 0;
+            color: #555;
+        }
+
+        /* Animation d'apparition pour le chargement */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        /* Responsive design amélioré */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            #chart_div {
+                height: 400px;
+            }
+        }
+
+        /* Design sombre pour les utilisateurs préférant le mode sombre */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #e0e0e0;
+            }
+            
+            .container {
+                background-color: #2d2d2d;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            }
+            
+            h1 {
+                color: #e0e0e0;
+            }
+            
+            .info-panel {
+                background-color: #353535;
+                border-left-color: #3498db;
+            }
+            
+            .info-panel h3 {
+                color: #3498db;
+            }
+            
+            .info-panel p {
+                color: #c0c0c0;
+            }
+            
+            .loading {
+                color: #c0c0c0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Activité des Commits sur le Projet</h1>
+        
+        <div class="info-panel">
+            <h3>À propos de ce graphique</h3>
+            <p>Ce graphique présente le nombre de commits effectués minute par minute sur le repository GitHub du projet. Chaque barre représente le nombre de commits effectués durant une minute spécifique.</p>
+        </div>
+        
+        <div id="loading" class="loading">Chargement des données...</div>
+        <div id="chart_div"></div>
+    </div>
+
+    <script>
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(fetchCommitData);
+        
+        function fetchCommitData() {
+            // Récupération des données depuis notre API
+            fetch('/commits-data/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    drawChart(data);
+                })
+                .catch(error => {
+                    document.getElementById('loading').textContent = 'Erreur lors du chargement des données.';
+                    console.error('Erreur:', error);
+                });
+        }
+        
+        function drawChart(data) {
+            // Préparation des données pour le graphique
+            var chartData = [['Minute', 'Nombre de Commits']];
+            
+            // Ajout des données
+            data.results.forEach(entry => {
+                chartData.push([entry.minute, entry.count]);
+            });
+            
+            var dataTable = google.visualization.arrayToDataTable(chartData);
+            
+            // Configuration du graphique
+            var options = {
+                title: 'Nombre de Commits par Minute',
+                titleTextStyle: {
+                    fontSize: 18,
+                    bold: true,
+                    color: '#2c3e50'
+                },
+                hAxis: {
+                    title: 'Date et Heure',
+                    titleTextStyle: {color: '#555'},
+                    slantedText: true,
+                    slantedTextAngle: 45,
+                    gridlines: {
+                        color: '#f5f5f5'
+                    }
+                },
+                vAxis: {
+                    title: 'Nombre de Commits',
+                    titleTextStyle: {color: '#555'},
+                    minValue: 0,
+                    gridlines: {
+                        color: '#f5f5f5'
+                    }
+                },
+                colors: ['#3498db'],
+                animation: {
+                    startup: true,
+                    duration: 1200,
+                    easing: 'out'
+                },
+                legend: {position: 'none'},
+                bar: {groupWidth: '70%'},
+                backgroundColor: {
+                    fill: 'transparent'
+                },
+                chartArea: {
+                    width: '80%',
+                    height: '70%'
+                }
+            };
+            
+            // Création du graphique à colonnes
+            var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+            chart.draw(dataTable, options);
+            
+            // Ajout d'un écouteur pour redimensionner le graphique
+            window.addEventListener('resize', function() {
+                chart.draw(dataTable, options);
+            });
+        }
     </script>
-  </head>
-  <body>
-    <h2 style="text-align:center;">Activité GitHub (Commits)</h2>
-    <div id="chart_div" style="width: 900px; height: 500px; margin: auto;"></div>
-  </body>
+</body>
 </html>
