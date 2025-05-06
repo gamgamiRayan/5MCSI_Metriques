@@ -6,73 +6,80 @@
     <title>Activité des Commits</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
         :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #eef3f9;
-            --text-color: #1f2d3d;
-            --muted-color: #6b7c93;
-            --bg-color: #f7f9fc;
-            --white: #ffffff;
+            --primary: #00e6e6;
+            --secondary: #b19cd9;
+            --bg-light: rgba(255, 255, 255, 0.05);
+            --text-light: #f0f0f0;
+            --border-glow: rgba(0, 230, 230, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background: linear-gradient(to bottom right, #061a40, #1b2a49);
+            color: var(--text-light);
         }
 
         .container {
-            max-width: 1100px;
-            margin: 40px auto;
-            background-color: var(--white);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            max-width: 1000px;
+            margin: 50px auto;
+            background: var(--bg-light);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 10px 30px rgba(0, 230, 230, 0.15);
         }
 
         h1 {
             text-align: center;
-            font-size: 2.4rem;
-            color: var(--primary-color);
+            font-size: 2.6rem;
+            font-weight: 600;
             margin-bottom: 30px;
-        }
-
-        #chart_div {
-            width: 100%;
-            height: 500px;
-            margin-top: 30px;
-        }
-
-        .loading {
-            text-align: center;
-            font-size: 1.1rem;
-            color: var(--muted-color);
-            margin: 50px 0;
-            animation: pulse 1.5s infinite ease-in-out;
+            color: var(--primary);
         }
 
         .info-panel {
-            background-color: var(--secondary-color);
+            background: rgba(255, 255, 255, 0.06);
             padding: 20px;
-            border-left: 6px solid var(--primary-color);
-            border-radius: 10px;
-            margin-bottom: 20px;
+            border-left: 5px solid var(--secondary);
+            border-radius: 12px;
+            margin-bottom: 30px;
         }
 
         .info-panel h3 {
             margin: 0 0 10px 0;
             font-size: 1.4rem;
-            color: var(--primary-color);
+            color: var(--secondary);
         }
 
         .info-panel p {
             margin: 0;
-            color: var(--text-color);
             font-size: 1rem;
+            color: #dddddd;
+        }
+
+        #chart_div {
+            width: 100%;
+            height: 500px;
+            background-color: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #cccccc;
+            animation: pulse 1.5s infinite ease-in-out;
         }
 
         @keyframes pulse {
@@ -87,53 +94,25 @@
             }
 
             h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
 
             #chart_div {
-                height: 400px;
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #121212;
-                color: #e0e0e0;
-            }
-
-            .container {
-                background-color: #1e1e1e;
-            }
-
-            .info-panel {
-                background-color: #2a2a2a;
-                border-left-color: var(--primary-color);
-            }
-
-            .info-panel p {
-                color: #ccc;
-            }
-
-            .loading {
-                color: #aaa;
-            }
-
-            h1 {
-                color: var(--primary-color);
+                height: 350px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Activité des Commits sur le Projet</h1>
+        <h1>📊 Activité des Commits</h1>
 
         <div class="info-panel">
             <h3>À propos de ce graphique</h3>
-            <p>Ce graphique présente le nombre de commits effectués minute par minute sur le repository GitHub du projet. Chaque barre représente le nombre de commits effectués durant une minute spécifique.</p>
+            <p>Ce graphique montre le nombre de commits réalisés minute par minute. Chaque barre représente une minute spécifique avec son nombre de commits.</p>
         </div>
 
-        <div id="loading" class="loading">Chargement des données...</div>
+        <div id="loading" class="loading">Chargement des données en cours...</div>
         <div id="chart_div"></div>
     </div>
 
@@ -149,7 +128,7 @@
                     drawChart(data);
                 })
                 .catch(error => {
-                    document.getElementById('loading').textContent = 'Erreur lors du chargement des données.';
+                    document.getElementById('loading').textContent = 'Erreur lors du chargement.';
                     console.error('Erreur:', error);
                 });
         }
@@ -167,35 +146,28 @@
                 titleTextStyle: {
                     fontSize: 18,
                     bold: true,
-                    color: '#4a90e2'
+                    color: '#ffffff'
                 },
                 hAxis: {
                     title: 'Minute',
-                    titleTextStyle: {color: '#555'},
+                    titleTextStyle: {color: '#cccccc'},
+                    textStyle: {color: '#dddddd'},
                     slantedText: true,
-                    slantedTextAngle: 45,
-                    gridlines: {
-                        color: '#eaeaea'
-                    }
+                    slantedTextAngle: 45
                 },
                 vAxis: {
-                    title: 'Nombre de Commits',
-                    titleTextStyle: {color: '#555'},
-                    minValue: 0,
-                    gridlines: {
-                        color: '#eaeaea'
-                    }
+                    title: 'Commits',
+                    titleTextStyle: {color: '#cccccc'},
+                    textStyle: {color: '#dddddd'},
+                    minValue: 0
                 },
-                colors: ['#4a90e2'],
+                colors: ['#00e6e6'],
+                backgroundColor: 'transparent',
+                legend: {position: 'none'},
                 animation: {
                     startup: true,
                     duration: 1000,
                     easing: 'out'
-                },
-                legend: {position: 'none'},
-                bar: {groupWidth: '70%'},
-                backgroundColor: {
-                    fill: 'transparent'
                 },
                 chartArea: {
                     width: '80%',
